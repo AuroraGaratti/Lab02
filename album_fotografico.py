@@ -1,12 +1,62 @@
 def carica_da_file(file_path):
-    """Carica le foto dal file, creando un nuovo anno ogni volta che compare per la prima volta"""
-    # TODO
+    try:
+        with open(file_path, "r", encoding="utf-8") as file:
+            righe = file.readlines()
+            album=[]
+            for riga in righe[1:]:
+                if riga=="":
+                    continue
+                chiave=riga.split(",")
+                codice = chiave[0].strip()
+                titolo = chiave[1].strip()
+                autore = chiave[2].strip()
+                mese = chiave[3].strip()
+                anno = chiave[4].strip()
+                foto = {"codice": codice, "titolo": titolo, "autore": autore, "mese": mese,"anno":anno}
+            #apertura file e lettura per righe, estrazione singoli valori e creazione dizionario foto
+
+                anno_trovato=False
+                for sezione in album:
+                    if anno in sezione[0]:
+                        sezione[1].append(foto)
+                        anno_trovato=True
+                if not anno_trovato:
+                        album.append([anno,[foto]])
+                #album è suddiviso in sezioni-anno, cerco in tutte sezioni album se nell'index 0 ho il valore anno
+                # della foto già esistente e nel caso aggiungo foto a lista di foto che corrisponde a index 1 della
+                # sezione, se non trovo nulla creo nuova sezione aggiungo nuova lista nell'album
+        return album
+    except FileNotFoundError:
+        print("File non trovato")
+        return None
 
 
 def aggiungi_foto(album, codice, titolo, autore, mese, anno, file_path):
-    """Aggiunge una foto all'album, creando l'anno al volo se non è ancora presente"""
-    # TODO
 
+    for sezione in album:
+        for foto in sezione[1]:
+         if codice == foto["codice"]:
+             return None
+
+    if mese<int(1) or mese>int(12):
+        return None
+
+    foto = {"codice": codice, "titolo": titolo, "autore": autore, "mese": mese, "anno": anno}
+
+    with open(file_path,"w",encoding="utf-8")as file:
+        file.write(f"{codice},{titolo},{autore},{mese},{anno}\n")
+
+    anno_cercato=False
+    for sezione in album:
+        if anno == sezione[0]:
+            anno_cercato=True
+            sezione[1].append(foto)
+            break
+
+    if not anno_cercato:
+        album.append([anno,[foto]])
+
+    return foto
 
 def cerca_foto(album, codice):
     """Cerca una foto nell'album dato il codice"""
@@ -37,7 +87,9 @@ def main():
                 file_path = input("Inserisci il path del file da caricare: ").strip()
                 album = carica_da_file(file_path)
                 if album is not None:
+                    print(album)
                     break
+
 
         elif scelta == "2":
             if not album:
