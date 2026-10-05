@@ -4,27 +4,27 @@ def carica_da_file(file_path):
             righe = file.readlines()
             album=[]
             for riga in righe[1:]:
-                if riga=="":
+                if riga.strip()=="":
                     continue
                 chiave=riga.split(",")
                 codice = chiave[0].strip()
                 titolo = chiave[1].strip()
                 autore = chiave[2].strip()
-                mese = chiave[3].strip()
-                anno = chiave[4].strip()
+                mese = int(chiave[3].strip())
+                anno = int(chiave[4].strip())
                 foto = {"codice": codice, "titolo": titolo, "autore": autore, "mese": mese,"anno":anno}
             #apertura file e lettura per righe, estrazione singoli valori e creazione dizionario foto
-
-                anno_trovato=False
+                anno_trovato = False
                 for sezione in album:
-                    if anno in sezione[0]:
+                    if anno == sezione[0]:
                         sezione[1].append(foto)
                         anno_trovato=True
+                        break
                 if not anno_trovato:
                         album.append([anno,[foto]])
                 #album è suddiviso in sezioni-anno, cerco in tutte sezioni album se nell'index 0 ho il valore anno
                 # della foto già esistente e nel caso aggiungo foto a lista di foto che corrisponde a index 1 della
-                # sezione, se non trovo nulla creo nuova sezione aggiungo nuova lista nell'album
+                # sezione, se non trovo nulla creo nuova sezione aggiungo nuova lista nell'alb
         return album
     except FileNotFoundError:
         print("File non trovato")
@@ -34,39 +34,54 @@ def carica_da_file(file_path):
 def aggiungi_foto(album, codice, titolo, autore, mese, anno, file_path):
 
     for sezione in album:
-        for foto in sezione[1]:
-         if codice == foto["codice"]:
-             return None
-
-    if mese<int(1) or mese>int(12):
+        for fotografia in sezione[1]:
+            if codice == fotografia["codice"]:
+                return None
+    #doppio for per cercare per ogni sezione e per ogni foto nella sezione se il codice è gia esistente
+    #rispetto quello appena inserito
+    if mese<1 or mese>12:
         return None
-
+    #valori mese ammessi
     foto = {"codice": codice, "titolo": titolo, "autore": autore, "mese": mese, "anno": anno}
-
-    with open(file_path,"w",encoding="utf-8")as file:
-        file.write(f"{codice},{titolo},{autore},{mese},{anno}\n")
-
-    anno_cercato=False
+    try:
+        with open(file_path,"a",encoding="utf-8")as file:
+            file.write(f"{codice},{titolo},{autore},{mese},{anno}\n")
+    except FileNotFoundError:
+        return None
+    #aggiunta della foto nel file nel caso non fosse scattato None sopra
     for sezione in album:
         if anno == sezione[0]:
-            anno_cercato=True
             sezione[1].append(foto)
-            break
-
-    if not anno_cercato:
-        album.append([anno,[foto]])
-
+            return foto
+    #ricerca nelle sezioni dell'anno inserito, se è già esistente aggiungo foto alla lista di foto nella sezione
+    album.append([anno,[foto]])
     return foto
+    #se l'anno inserito non esistesse creo nuova sezione da inserire nell'album
 
 def cerca_foto(album, codice):
-    """Cerca una foto nell'album dato il codice"""
-    # TODO
 
+    for sezione in album:
+        for fotografia in sezione[1]:
+            if codice == fotografia["codice"]:
+                foto=f"{fotografia['codice']}, {fotografia['titolo']}, {fotografia['autore']}, {fotografia['mese']}, {fotografia['anno']}"
+                return foto
+    #doppio ciclo for prima dividendo le sezioni e poi ciclo for degli elementi lista foto, che è index 1 della sezione,
+    #se trovo codice corrispondente a quello in input fermo ciclo e restituisco dati della foto
+    return None
+    #se ciclo non trova alcun codice corrispondente allora resituisco None
 
 def elenco_foto_anno_per_titolo(album, anno):
-    """Ordina i titoli delle foto di un dato anno in ordine alfabetico"""
-    # TODO
-
+    lista_foto=[]
+    for sezione in album:
+        if anno == sezione[0]:
+            for fotografia in sezione[1]:
+                lista_foto.append(fotografia["titolo"])
+            lista_foto.sort()
+            return lista_foto
+    #creo lista foto vuota, ora itero su tutte le sezioni e controllo di ognuna index 0 e vedo se ano corrisponde
+    #a quello in input, se corrisponde itero la lista foto che corrisponde a index 1 della sezione e inserisco titoli
+    #foto nella lista_foto vuota e a fine ciclo ordina i titoli
+    return None
 
 def main():
     album = []
@@ -87,7 +102,6 @@ def main():
                 file_path = input("Inserisci il path del file da caricare: ").strip()
                 album = carica_da_file(file_path)
                 if album is not None:
-                    print(album)
                     break
 
 
